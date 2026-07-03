@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crisislens-api
+  labels:
+    app: crisislens
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: crisislens-api
+  template:
+    metadata:
+      labels:
+        app: crisislens-api
+    spec:
+      containers:
+        - name: api
+          image: crisislens-api:latest
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: crisislens-config
+          resources:
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: crisislens-api
+spec:
+  selector:
+    app: crisislens-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: ClusterIP

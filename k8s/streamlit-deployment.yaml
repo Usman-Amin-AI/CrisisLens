@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crisislens-streamlit
+  labels:
+    app: crisislens
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: crisislens-streamlit
+  template:
+    metadata:
+      labels:
+        app: crisislens-streamlit
+    spec:
+      containers:
+        - name: streamlit
+          image: crisislens-streamlit:latest
+          ports:
+            - containerPort: 8501
+          envFrom:
+            - configMapRef:
+                name: crisislens-config
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: crisislens-streamlit
+spec:
+  selector:
+    app: crisislens-streamlit
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8501
+  type: ClusterIP

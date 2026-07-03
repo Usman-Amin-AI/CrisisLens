@@ -1,0 +1,168 @@
+# Disaster Tweets Classification Configuration
+# All hyperparameters and settings for the NLP pipeline
+
+data:
+  train_path: "Dataset/train.csv"
+  test_path: "Dataset/test.csv"
+  sample_submission_path: "Dataset/sample_submission.csv"
+  test_size: 0.1
+  random_state: 42
+
+preprocessing:
+  # TextVectorization settings
+  max_vocab_length: 10000
+  max_sequence_length: 15
+  standardize: "lower_and_strip_punctuation"
+  split: "whitespace"
+  output_mode: "int"
+  
+  # Language detection settings (NEW)
+  language_detection: true
+  fallback_language: "en"
+  supported_languages: ["en", "es", "fr", "de", "pt", "it", "ar", "hi", "tr", "nl"]
+
+embedding:
+  embedding_dim: 128
+  embeddings_initializer: "uniform"
+  
+# Model configurations
+models:
+  naive_bayes:
+    enabled: true
+    type: "naive_bayes"
+    params:
+      tfidf_max_features: [1000, 5000, 10000]
+      ngram_range: [[1, 1], [1, 2]]
+      alpha: [0.1, 0.5, 1.0]
+      cv: 5
+  
+  conv1d:
+    enabled: true
+    type: "conv1d"
+    params:
+      filters: 32
+      kernel_size: 5
+      activation: "relu"
+      epochs: 5
+      batch_size: 32
+      optimizer: "adam"
+      loss: "binary_crossentropy"
+  
+  use_transfer_learning:
+    enabled: true
+    type: "use_transfer_learning"
+    params:
+      hub_url: "https://tfhub.dev/google/universal-sentence-encoder/4"
+      trainable: false
+      dense_units: [64]
+      dropout_rate: 0.5
+      epochs: 50
+      batch_size: 32
+      optimizer:
+        type: "adam"
+        learning_rate: 0.001
+      early_stopping:
+        monitor: "val_loss"
+        patience: 3
+        restore_best_weights: true
+  
+  use_enhanced:
+    enabled: true
+    type: "use_enhanced"
+    params:
+      hub_url: "https://tfhub.dev/google/universal-sentence-encoder/4"
+      trainable: false
+      dense_units: [512, 256, 128]
+      l2_regularization: 0.01
+      epochs: 150
+      batch_size: 32
+      optimizer:
+        type: "adam"
+        learning_rate: 0.001
+      early_stopping:
+        monitor: "val_loss"
+        patience: 8
+        restore_best_weights: true
+  
+  distilbert_transformer:
+    enabled: true
+    type: "transformer"
+    params:
+      model_name: "distilbert-base-uncased"
+      max_length: 128
+      epochs: 3
+      batch_size: 32
+      learning_rate: 2e-5
+      weight_decay: 0.01
+      warmup_steps: 500
+      optimizer:
+        type: "adamw"
+        learning_rate: 2e-5
+      early_stopping:
+        monitor: "val_loss"
+        patience: 2
+        restore_best_weights: true
+      device: "cuda"  # or "cpu"
+  
+  roberta_transformer:
+    enabled: false
+    type: "transformer"
+    params:
+      model_name: "roberta-base"
+      max_length: 128
+      epochs: 3
+      batch_size: 16
+      learning_rate: 2e-5
+      weight_decay: 0.01
+      warmup_steps: 500
+      optimizer:
+        type: "adamw"
+        learning_rate: 2e-5
+      early_stopping:
+        monitor: "val_loss"
+        patience: 2
+        restore_best_weights: true
+      device: "cuda"
+  
+  # Multilingual Transformer - XLM-RoBERTa (NEW)
+  xlm_roberta_transformer:
+    enabled: false
+    type: "transformer_multilingual"
+    params:
+      model_name: "xlm-roberta-base"
+      max_length: 128
+      epochs: 3
+      batch_size: 32
+      learning_rate: 2e-5
+      weight_decay: 0.01
+      warmup_steps: 500
+      optimizer:
+        type: "adamw"
+        learning_rate: 2e-5
+      early_stopping:
+        monitor: "val_loss"
+        patience: 2
+        restore_best_weights: true
+      device: "cuda"
+      supported_languages: ["en", "es", "fr", "de", "pt", "it", "ar", "hi", "tr", "nl", "ru", "zh", "ja"]
+      # Number of languages to use in evaluation
+      num_languages_eval: 5
+
+# Pipeline selection: "classical", "transformer", or "multilingual"
+pipeline:
+  model_type: "transformer"  # "classical", "transformer", or "multilingual"
+  classical_models: ["naive_bayes"]  # Models to use in classical pipeline
+  comparison_enabled: true
+  compare_latency: true
+  multilingual_evaluation_enabled: false  # Enable multilingual evaluation
+  evaluate_per_language: true  # Report accuracy per language
+
+evaluation:
+  metrics: ["accuracy", "precision", "recall", "f1"]
+  average: "weighted"
+  plot_confusion_matrix: true
+
+output:
+  models_dir: "models"
+  logs_dir: "model_logs"
+  results_dir: "results"

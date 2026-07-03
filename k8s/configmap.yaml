@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: crisislens-config
+data:
+  POSTGRES_USER: crisislens
+  POSTGRES_PASSWORD: crisislens
+  POSTGRES_DB: crisislens
+  TWITTER_BEARER_TOKEN: DUMMY
+  ALERT_SLACK_WEBHOOK: DUMMY
+  SMTP_HOST: DUMMY
+  SMTP_PORT: "587"
+  SMTP_USER: DUMMY
+  SMTP_PASS: DUMMY
+  MODEL_TYPE: transformer
